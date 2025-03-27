@@ -1,0 +1,70 @@
+In Azure App Service, you don’t directly "configure" the port—instead, your Node.js app must use the port assigned by Azure via the PORT environment variable. Here’s how to check and ensure it’s set correctly:
+
+1. Where Azure Sets the Port
+Azure dynamically injects the port your app should listen on via the process.env.PORT environment variable.
+
+You won’t see this in the Azure Portal—it’s handled automatically when your app starts.
+
+2. Verify Your App is Using process.env.PORT
+In your Node.js app (e.g., app.js, server.js, or index.js), ensure you have:
+
+javascript
+Copy
+const port = process.env.PORT || 3000; // Fallback to 3000 for local testing
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+Key Point: Azure overrides the PORT env variable, so hardcoding a port (e.g., app.listen(3000)) will fail.
+
+3. How to Check the Assigned Port
+Since Azure doesn’t expose the port number in the UI, debug it by:
+
+View Logs:
+
+Go to your App Service in the Azure Portal.
+
+Under Monitoring > Log Stream, look for the console output when your app starts.
+You’ll see a line like:
+
+Copy
+Server running on port 80
+(Azure typically uses port 80 for HTTP or 443 for HTTPS).
+
+Use the Kudu Console:
+
+Navigate to https://<your-app-name>.scm.azurewebsites.net.
+
+Go to Debug Console > CMD and run:
+
+bash
+Copy
+echo %PORT%
+(or echo $PORT on Linux).
+
+4. Port Conflicts? Fixes for Common Issues
+Error: "EADDRINUSE":
+
+Your app is hardcoding a port (e.g., 3000). Replace it with process.env.PORT.
+
+App Not Responding:
+
+Check if your app binds to 0.0.0.0 (required for Azure):
+
+javascript
+Copy
+app.listen(port, '0.0.0.0', () => { ... });
+5. Other Azure Port Settings
+While you can’t change the inbound port, you can:
+
+Custom Domains/SSL: Ports 80 (HTTP) and 443 (HTTPS) are auto-configured when you add a domain.
+
+Networking: Restrict inbound traffic via Networking > Access Restrictions.
+
+Summary
+Azure automatically assigns the port via process.env.PORT.
+
+Never hardcode a port—always use process.env.PORT.
+
+Debug port issues via Log Stream or Kudu Console.
+
+If your app still fails, share the error logs, and I’ll help troubleshoot! 🔍
